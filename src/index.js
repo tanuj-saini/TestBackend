@@ -1,14 +1,30 @@
 import express from "express";
 import dotenv from "dotenv";
+
+import connectDB from "./db/index.js";
 dotenv.config();
 const app = express();
-const currentPORT = process.env.PORT || 8080;
 
-app.get("/hello", (req, res) => {
-  res.send("hello");
-});
-app.get("/king", (req, res) => {});
 
-app.listen(currentPORT, "0.0.0.0", () => {
-  console.log(`connected at port ${currentPORT}`);
-});
+connectDB();
+
+// ;(async ()=>{
+//   try{
+//     await mongoose.connect(DB)
+//     app.on("error", (err) => {
+//       console.error("ERROR:", err);
+//       throw err;
+//     });
+//     app.listen(currentPORT, "0.0.0.0", () => {
+//       console.log(`connected at port ${currentPORT}`);
+//     });
+    
+    
+
+//   }catch(e){
+//     console.error("ERROR:",e)
+//     throw e
+//   }
+// })()
+
+

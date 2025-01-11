@@ -8,7 +8,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  }, 
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -16,5 +16,8 @@
     "express": "^4.21.2",
     "http": "^0.0.1-security",
     "mongoose": "^8.9.4"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
   }
 }

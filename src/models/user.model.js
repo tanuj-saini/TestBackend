@@ -32,7 +32,7 @@ const userSchema = new Mongoose.Schema({
     fullname: {
         type: String,
         required: true,
-        trim: true,
+       
         index: true,
     },
    

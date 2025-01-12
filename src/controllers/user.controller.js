@@ -117,6 +117,16 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
 //Tokens
 const refreshAccessToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies?.refreshToken|| req.headers["authorization"]?.replace("Bearer ", ""); 
@@ -255,4 +265,137 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 
-export { registerUser,loginUser,logoutUser,getCurrentUser,changePassword,updateUserDetails,updateUserAvatar,updateUserCoverImage ,refreshAccessToken};    
+
+
+
+
+
+
+
+
+
+
+
+//Aggregation
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const { username } = req.params;
+    if(!username){
+        throw new ApiError(400,"Username is missing");
+    }
+    //we can do with find user by username then find by id
+    const channel =await   User.aggregate([
+       {
+              $match:{
+                username : username?.toLowerCase()
+              }
+         },
+         {
+              $lookup:{
+                from:"subcriptions",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+              }
+         },
+        {
+            $lookup:{
+                from:"subcriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            }
+        },
+        {
+            $addFields:{
+                subscriberCount:{$size:"$subscribers"},//$ is used to access the fields
+                subscribedToCount:{$size:"$subscribedTo"},
+                isSubscribed: {
+                    $cond: {
+                        if: {
+                            $in: [req.user?._id, "$subscribers.subscriber"]
+                        },
+                        then: true,
+                        else: false
+                }
+
+            }
+        }
+        
+        },
+        {
+            $project:{
+                fullname:1,
+                username:1,
+                avatar:1,
+                coverImage:1,
+                isSubscribed:1,
+                subscriberCount:1,
+
+               subscribedToCount:1
+            }
+        }
+     ]);
+        if(!channel?.length){
+            throw new ApiError(404,"Channel not found");
+        }
+        return res.status(200).json(new ApiResponse(200,channel[0],"Channel found"));
+
+
+});
+
+const watchHistory = asyncHandler(async (req, res) => {
+    const user = User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id) 
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchedVideos",
+                pipeline :[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullname:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $arrayElemAt:["$owner",0]
+                            }
+                        }
+                    }
+                ]
+
+            }
+        },
+       
+    ]);
+    return res.status(200).json(new ApiResponse(200, user[0].watchedVideos, "Watch history found"));
+
+})
+
+
+
+
+
+
+
+
+export { registerUser,loginUser,logoutUser,getCurrentUser,changePassword,updateUserDetails,updateUserAvatar,updateUserCoverImage ,refreshAccessToken,watchHistory,getUserChannelProfile};    

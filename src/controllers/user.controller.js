@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { uploadCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 
@@ -99,7 +100,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(req.user._id, { "$set": { refreshToken: undefined } }, { new: true });
+    await User.findByIdAndUpdate(req.user._id, { "$unset": { refreshToken: 1 } }, { new: true });
     const options = {
         httpOnly: true,
         secure: true
@@ -177,7 +178,10 @@ const changePassword = asyncHandler(async (req, res)=> {
     if (!oldPassword || !newPassword) {
         throw new ApiError(400, "Old password and new password are required");
     }
-    const user = User.findById(req.user?. id);
+    const user =await User.findById(req.user?._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
     const isPasswordMatch = await user.comparePassword(oldPassword);
     if (!isPasswordMatch) {
         throw new ApiError(401, "Invalid credentials");
@@ -343,7 +347,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 });
 
-const watchHistory = asyncHandler(async (req, res) => {
+const watchHistorys = asyncHandler(async (req, res) => {
     const user = User.aggregate([
         {
             $match: {
@@ -355,7 +359,7 @@ const watchHistory = asyncHandler(async (req, res) => {
                 from: "videos",
                 localField: "watchHistory",
                 foreignField: "_id",
-                as: "watchedVideos",
+                as: "watchHistory",
                 pipeline :[
                     {
                         $lookup:{
@@ -387,7 +391,8 @@ const watchHistory = asyncHandler(async (req, res) => {
         },
        
     ]);
-    return res.status(200).json(new ApiResponse(200, user[0].watchedVideos, "Watch history found"));
+    return res.status(200).json(new ApiResponse(200, user[0].watchHistory,
+         "Watch history found"));
 
 })
 
@@ -398,4 +403,7 @@ const watchHistory = asyncHandler(async (req, res) => {
 
 
 
-export { registerUser,loginUser,logoutUser,getCurrentUser,changePassword,updateUserDetails,updateUserAvatar,updateUserCoverImage ,refreshAccessToken,watchHistory,getUserChannelProfile};    
+export { registerUser,loginUser,logoutUser,getCurrentUser,
+    changePassword,updateUserDetails,updateUserAvatar,
+    updateUserCoverImage ,refreshAccessToken,
+    watchHistorys,getUserChannelProfile};    

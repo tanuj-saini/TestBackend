@@ -1,7 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js";
-import User from "../models/User.js";
-import clodinary from "../utils/clodinary.js";
+import { User } from "../models/user.model.js";
+import { uploadCloudinary } from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
 
@@ -19,8 +19,8 @@ const registerUser = asyncHandler(async (req, res) => {
      if(!avatarLocalPath ){
          throw new ApiError(400,"Avatar and cover image are required");
      }
-     const avatar = await clodinary.upload(avatarLocalPath);
-        const coverImage = await clodinary.upload(coverImageLocalPath);
+     const avatar = await uploadCloudinary.upload(avatarLocalPath);
+        const coverImage = await uploadCloudinary.upload(coverImageLocalPath);
 
     if(!avatar ){
         throw new ApiError(500,"Error uploading images");

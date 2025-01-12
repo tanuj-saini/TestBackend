@@ -1,8 +1,8 @@
 import mongoose,{ Mongoose  } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-
-const userSchema = new Mongoose.Schema({
+const { Schema } = mongoose;
+const userSchema = new Schema({
     watchHistory: [
     
             {
@@ -91,4 +91,4 @@ userSchema.methods.generateRefreshToken = function() {
         }
         );
 };
-export const User = Mongoose.model("User", userSchema);
+export const User = mongoose.model("User", userSchema);

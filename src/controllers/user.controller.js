@@ -76,28 +76,23 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!(email || username) || !password) {
         throw new ApiError(400, "Email/Username and password are required");
     }
-    const user  = await User.findOne({$or:[{email},{username}]});
+    const user = await User.findOne({ $or: [{ email }, { username }] });
     if (!user) {
         throw new ApiError(404, "User not found");
     }
     const isPasswordMatch = await user.comparePassword(password);
-
     if (!isPasswordMatch) {
         throw new ApiError(401, "Invalid credentials");
     }
-     const {accessToken,refreshToken} = await  generateRefreshTokenandAccessToken(user._id)
-     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-      const options ={
-        httpOnly:true,
+    const { refreshToken, accessToken } = await generateRefreshTokenandAccessToken(user._id);
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+    const options = {
+        httpOnly: true,
         secure: true
-      }
-      return res.status(200).cookie("accessToken",accessToken,options)
-      .cookie("refreshToken",refreshToken,options)
-      .json(new ApiResponse(200,{user:loggedInUser,accessToken,refreshToken},"Login success",));
-
-   
+    };
+    return res.status(200).cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(200, "Login successful", loggedInUser));
 });
-
 
 const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { "$unset": { refreshToken: 1 } }, { new: true });
@@ -145,7 +140,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         }
         const options = {
             httpOnly:true,
-            secure:true
+            secure:trueu
         }
         const {accessToken,newRefreshToken} = await generateRefreshTokenandAccessToken(user._id);
         return res.status(200).cookie("accessToken",accessToken,options)
@@ -311,7 +306,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         },
         {
             $addFields:{
-                subscriberCount:{$size:"$subscribers"},//$ is used to access the fields
+                subscriberCount:{$size:"$subscribers"},//$ is used to access the fields//count :{$size:"$matcheq"}
                 subscribedToCount:{$size:"$subscribedTo"},
                 isSubscribed: {
                     $cond: {
